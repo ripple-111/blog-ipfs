@@ -4,6 +4,7 @@ const messageModel=require('./Message')
 const userArticleModel=require('./UserArticle')
 const userTopicModel=require('./UserTopic')
 const userFocuModel=require('./UserFocu')
+const comments = require('./Comments')
 // 数据类型 https://www.sequelize.com.cn/core-concepts/model-basics#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B
 class user extends Model{
     static async isRegister(username){
