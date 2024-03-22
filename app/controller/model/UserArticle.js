@@ -1,6 +1,6 @@
 const {DataTypes, Model} = require('sequelize')
 const sequelize = require('../../../db/db')
-
+const comments = require('./Comments')
 class userArticle extends Model{
     static async getArticleNumber(uid){
         return userArticle.count({
