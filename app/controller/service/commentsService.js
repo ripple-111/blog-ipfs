@@ -5,7 +5,7 @@ CommentModel.belongsTo(user, { foreignKey: 'uid' })
 CommentModel.hasMany(CommentModel, { foreignKey: 'fid' })
 class MssageService {
     static async getAllCommments(ctx) {
-        let { aid } = ctx.query
+        let { aid } = ctx.request.body
         let comments = await CommentModel.findAll({
             where: {
                 aid,
@@ -43,7 +43,6 @@ class MssageService {
         const { uid,id } = ctx.request.body
         let comments = await CommentModel.findByPk(id)
         if (JSON.parse(comments.good)) {
-            console.log(JSON.parse(comments.good),111111)
             if (JSON.parse(comments.good).includes(uid))
                 return '已经点过赞了'
             else
@@ -51,7 +50,6 @@ class MssageService {
         }
         else
         comments.good = JSON.stringify([uid])
-        console.log(comments.good,222222222)
         await comments.save()
         return '点赞成功'
     }
