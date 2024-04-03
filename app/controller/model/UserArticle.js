@@ -37,6 +37,10 @@ userArticle.init({
     watch:DataTypes.NUMBER,
     good:DataTypes.STRING,
     expla:DataTypes.STRING,
+    version:{
+        type:DataTypes.NUMBER,
+        defaultValue:0
+    },
     time:{
         type:DataTypes.TIME,
         defaultValue:DataTypes.NOW

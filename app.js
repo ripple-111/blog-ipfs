@@ -18,9 +18,11 @@ app.use(logger());
 // 注册静态资源
 app.use(require("koa-static")(__dirname + "/public"));
 // 注册跨域
-app.use(cors({
-    origin:'http://localhost:5173',
-    credentials: true}));
+app.use(
+    cors({
+    origin:true,
+    credentials: true})
+    );
 //注册自定义中间价，捕获jwt错误
 app.use(async (ctx, next)=>{
     try {

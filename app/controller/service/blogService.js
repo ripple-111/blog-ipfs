@@ -11,23 +11,40 @@ class blogService {
     static async upload(ctx) {
         let { ipfs: key, id, user } = ctx.state
         let { md, article: { title, type, expla, tags, image, id: aid } } = ctx.request.body
-        console.log(aid)
-        let data
-        if (aid ?? true)
-            data = await userArticle.upsert({ id: aid, type, uid: id, expla, tags: tags.toString(), image, title, text: md, watch: 0 }, {
-                where: { id: aid }
-            })
-        else
-            data = await userArticle.upsert({ type, uid: id, expla, tags: tags.toString(), image, title, text: md, watch: 0 })
-
-        //创建ipfs节点
-        const ipfs = create({
-            host: process.env.IPFS_HOST,
-            port: 5001,
-            protocol: 'http',
+        if( aid == '')
+        aid = 0
+        console.log(aid ,11111)
+        const [data, created] = await userArticle.findOrCreate({
+            where: { id : aid },
+            defaults: {
+                type,
+                uid:id,
+                expla,
+                image,
+                title,
+                text: md,
+                watch:0,
+                tags:tags.toString(),
+                version:0
+            }
         })
-        let { code } = await writeAFile(md, user, title)
-        console.log(code)
+        if(!created){
+            await data.update({
+                type,
+                expla,
+                image,
+                title,
+                text: md,
+                tags:tags.toString(),
+                version: data.version + 1 
+            })
+        }
+
+        // 创建ipfs节点
+        const ipfs = create({
+            url:'/ip4/127.0.0.1/tcp/5001'
+        })
+        let { code } = await writeAFile(md, user, `${title}(${data.id})--${data.version}`)
         if (code == '000000') {
             // const {cid}=ipfs.addAll('ctx.request.body.md')
             //添加用户根目录
@@ -35,6 +52,7 @@ class blogService {
                 //生成ipns
                 key = await ipfs.key.gen(user, { type: 'rsa', size: 2048 })
                 //为用户添加ipns信息
+                console.log(id)
                 await userModel.updateValue(id, { ipfs: key.id })
             }
             //读取用户目录
@@ -48,8 +66,10 @@ class blogService {
                 })
             })
             for await (const result of ipfs.addAll(arr)) {
+                console.log(result)
                 data.push(result)
             }
+            console.log(data)
             //重新将文件夹推送到ipns
             ipfs.name.publish(data.find(i => i.path == user).cid,{
                 key
