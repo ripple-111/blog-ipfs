@@ -46,5 +46,7 @@ userArticle.init({
         defaultValue:DataTypes.NOW
     }
 },{sequelize})
-
+userArticle.hasMany(comments,{
+    foreignKey:'aid'
+})
 module.exports = userArticle

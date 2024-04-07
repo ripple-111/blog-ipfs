@@ -6,7 +6,8 @@ const { Op } = require('sequelize');
 const sequelize = require('../../../db/db');
 const user = require('../model/User');
 const userfocu = require('../model/UserFocu');
-const fs=require('fs')
+const fs=require('fs');
+const Comment = require('../model/Comments');
 class blogService {
     static async upload(ctx) {
         let { ipfs: key, id, user } = ctx.state
@@ -138,7 +139,7 @@ class blogService {
         console.log(whereClause)
         const data = await userArticle.findAndCountAll({
             where: whereClause,
-            include: [{ model: user, attributes: ['username', 'headImage'] }],
+            include: [{ model: user, attributes: ['username', 'headImage']},{model:Comment, attributes:['id']}],
             limit: 5,
             offset: (currentPage - 1) * 5,
             attributes: { exclude: ['text'] }
