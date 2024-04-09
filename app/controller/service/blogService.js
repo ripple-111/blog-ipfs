@@ -91,7 +91,7 @@ class blogService {
     }
     static async getArticle(ctx) {
         let { id: host } = ctx.state
-        let { currentPage = 1, search, type, tags, id } = ctx.request.query
+        let { currentPage = 1, search, type, tags, id,pageSize = 5 } = ctx.request.query
         let whereClause = id ? { uid: id } : {}
         console.log(currentPage, search, type, tags, id)
         if (search) {
@@ -140,8 +140,8 @@ class blogService {
         const data = await userArticle.findAndCountAll({
             where: whereClause,
             include: [{ model: user, attributes: ['username', 'headImage']},{model:Comment, attributes:['id']}],
-            limit: 5,
-            offset: (currentPage - 1) * 5,
+            limit: +pageSize,
+            offset: (currentPage - 1) * (+pageSize),
             attributes: { exclude: ['text'] }
         });
         return data
