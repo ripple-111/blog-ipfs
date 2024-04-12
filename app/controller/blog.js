@@ -6,6 +6,10 @@ class BlogController {
         const data = await blogService.upload(ctx);
         ctx.body =format({data});
     }
+    static async getIpfsInfo(ctx) {
+        const data = await blogService.getIpfsInfo(ctx);
+        ctx.body = format({data});
+    }
     static async getArticle(ctx) {
         const data = await blogService.getArticle(ctx);
         ctx.body = format({data});

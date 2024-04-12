@@ -6,45 +6,46 @@ const { Op } = require('sequelize');
 const sequelize = require('../../../db/db');
 const user = require('../model/User');
 const userfocu = require('../model/UserFocu');
-const fs=require('fs');
+const fs = require('fs');
 const Comment = require('../model/Comments');
+const ipfs = require('../../../utils/ipfs')
 class blogService {
     static async upload(ctx) {
         let { ipfs: key, id, user } = ctx.state
         let { md, article: { title, type, expla, tags, image, id: aid } } = ctx.request.body
-        if( aid == '')
-        aid = 0
-        console.log(aid ,11111)
+        if (aid == '')
+            aid = 0
+        console.log(aid, 11111)
         const [data, created] = await userArticle.findOrCreate({
-            where: { id : aid },
+            where: { id: aid },
             defaults: {
                 type,
-                uid:id,
+                uid: id,
                 expla,
                 image,
                 title,
                 text: md,
-                watch:0,
-                tags:tags.toString(),
-                version:0
+                watch: 0,
+                tags: tags.toString(),
+                version: 0
             }
         })
-        if(!created){
+        if (!created) {
             await data.update({
                 type,
                 expla,
                 image,
                 title,
                 text: md,
-                tags:tags.toString(),
-                version: data.version + 1 
+                tags: tags.toString(),
+                version: data.version + 1
             })
         }
 
         // 创建ipfs节点
-        const ipfs = create({
-            url:'/ip4/127.0.0.1/tcp/5001'
-        })
+        // const ipfs = create({
+        //     url: '/ip4/127.0.0.1/tcp/5001'
+        // })
         let { code } = await writeAFile(md, user, `${title}(${data.id})--${data.version}`)
         if (code == '000000') {
             // const {cid}=ipfs.addAll('ctx.request.body.md')
@@ -53,11 +54,10 @@ class blogService {
                 //生成ipns
                 key = await ipfs.key.gen(user, { type: 'rsa', size: 2048 })
                 //为用户添加ipns信息
-                console.log(id)
                 await userModel.updateValue(id, { ipfs: key.id })
             }
             //读取用户目录
-            const arr=[] //储存目录数据
+            const arr = [] //储存目录数据
             let data = []    //目录文件的cid
             const files = fs.readdirSync(`${__dirname}/../../../public/${user}/`, 'utf8')
             files.forEach(i => {
@@ -67,18 +67,15 @@ class blogService {
                 })
             })
             for await (const result of ipfs.addAll(arr)) {
-                console.log(result)
                 data.push(result)
             }
-            console.log(data)
             //重新将文件夹推送到ipns
-            ipfs.name.publish(data.find(i => i.path == user).cid,{
+            ipfs.name.publish(data.find(i => i.path == user).cid, {
                 key
-            }).then(res=>{
-                console.log(res)
+            }).then(res => {
+                console.log(res,key,111)
             })
         }
-
 
         //读取ipfs文件
         // const decoder = new TextDecoder()
@@ -89,9 +86,21 @@ class blogService {
         // }
         return data
     }
+    static async getIpfsInfo(ctx) {
+        let data = []
+        const { ipfs: key } = ctx.state
+        for await (const name of ipfs.name.resolve(`/ipns/${key}`,{nocache:true})) {
+            // /ipfs/QmQrX8hka2BtNHa8N8arAq16TCVx5qHcb46c5yPewRycLm  
+            console.log(name)
+            for await (const chunk of ipfs.ls(name)) {
+                data.push({...chunk,cid:chunk.cid.toString()})
+            }
+        }
+        return data
+    }
     static async getArticle(ctx) {
         let { id: host } = ctx.state
-        let { currentPage = 1, search, type, tags, id,pageSize = 5 } = ctx.request.query
+        let { currentPage = 1, search, type, tags, id, pageSize = 5 } = ctx.request.query
         let whereClause = id ? { uid: id } : {}
         console.log(currentPage, search, type, tags, id)
         if (search) {
@@ -139,7 +148,7 @@ class blogService {
         console.log(whereClause)
         const data = await userArticle.findAndCountAll({
             where: whereClause,
-            include: [{ model: user, attributes: ['username', 'headImage']},{model:Comment, attributes:['id']}],
+            include: [{ model: user, attributes: ['username', 'headImage'] }, { model: Comment, attributes: ['id'] }],
             limit: +pageSize,
             offset: (currentPage - 1) * (+pageSize),
             attributes: { exclude: ['text'] }
@@ -164,13 +173,13 @@ class blogService {
         return { data: { types, tags } }
     }
     static async deleteBlog(ctx) {
-        const {user}=ctx.state
+        const { user } = ctx.state
         let { id } = ctx.request.body
-        let del=await userArticle.findByPk(id)
+        let del = await userArticle.findByPk(id)
         let flag = await userArticle.destroy({ where: { id } })
-        console.log(del,del.title)
-        fs.rm(`${__dirname}/../../../public/${user}/${del.title}.md`,(err,data)=>{
-            console.log(err,data)
+        console.log(del, del.title)
+        fs.rm(`${__dirname}/../../../public/${user}/${del.title}.md`, (err, data) => {
+            console.log(err, data)
         })
         return flag
     }

@@ -8,6 +8,7 @@ const BlogController=require ('../../app/controller/blog.js');
  * @param {md} md字符串
  */
 router.post("/upload", BlogController.upload);
+router.get("/getIpfsInfo",BlogController.getIpfsInfo)
 router.get("/getArticle",BlogController.getArticle)
 router.get("/getAllBlog",BlogController.getAllBlog)
 router.get("/getType",BlogController.getType)
